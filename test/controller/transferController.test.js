@@ -16,7 +16,7 @@ const transferService = require('../../services/transferService');
 
 describe('Transfer Controller', () => {
 
-    describe('POST /transfer', () => {});
+    describe('POST /transfer', () => {
         it('Quando informo remetente e destinatario invalidos, retorna erro', async () => {
              const resposta = await request(app)
                 .post('/transfer')
@@ -48,4 +48,46 @@ describe('Transfer Controller', () => {
             // Reseto o Mock
             sinon.restore();
         });
+
+        it.only('Usando Mocks: Quando informo dados validos recebo 201', async () => {
+            // Mocar apenas a função transfer do Service
+            const transferServiceMock = sinon.stub(transferService, 'transfer');
+            transferServiceMock.returns({
+                from: "Guilherme",
+                to: "Bianca",
+                amount: 100,
+                date: new Date().toISOString()
+            });
+
+            const resposta = await request(app)
+                .post('/transfer')
+                .send({
+                    from: "Guilherme",
+                    to: "Bianca",
+                    amount: 100
+    
+            });
+
+            // Validações comuns
+            //expect(resposta.status).to.equal(201);
+            //expect(resposta.body).to.have.property('from', 'Guilherme');
+            //expect(resposta.body).to.have.property('to', 'Bianca');
+            //expect(resposta.body).to.have.property('amount', 100);
+
+            // Validações com fixtures
+            const valoresValidos = require('../fixture/respostas/valoresValidosAPI.json');
+
+            // Validando deep equal (tudo igual)
+            // expect(resposta.body).to.deep.equal(valoresValidos);
+            delete valoresValidos.date; // removo a data do objeto para não dar erro na comparação porque o date é dinâmico
+            delete resposta.body.date; // removo a data do objeto para não dar erro na comparação porque o date é dinâmico
+            console.log(resposta.body);
+            console.log(valoresValidos);
+            expect(resposta.body).to.deep.equal(valoresValidos);
+            expect(resposta.status).to.equal(201);    
+            sinon.restore();
+        
+        });
+    });
+
 });
