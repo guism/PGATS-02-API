@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const userService = require('../services/userService');
+const jwt = require('jsonwebtoken');
+const { SECRET } = require('../middleware/auth');
 
 router.post('/register', (req, res) => {
   try {
@@ -18,7 +20,8 @@ router.post('/login', (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Usuário e senha obrigatórios' });
     const user = userService.loginUser({ username, password });
-    res.json(user);
+    const token = jwt.sign({ username: user.username }, SECRET, { expiresIn: '1h' });
+    res.json({ user, token });
   } catch (err) {
     res.status(401).json({ error: err.message });
   }
