@@ -18,11 +18,17 @@ jobs:
           node-version: '20'
       - name: Instalar dependências
         run: npm install
-      - name: Executar testes API no controller
-        run: npm run test-controller
       - name: Subir API
         run: |
-          nohup npm start &
-          sleep 5
+          nohup npm start > server.log 2>&1 &
+          sleep 10 # Increase the time
+      - name: Wait for API to start
+        run: |
+          until curl -s http://localhost:3000; do
+            echo "Waiting for server to start..."
+            sleep 2
+          done
+      - name: Executar testes API no controller
+        run: npm run test-controller
       - name: Executar testes API no external
         run: npm run test-external
