@@ -53,6 +53,7 @@ describe('Transfer Controller', () => {
 
             const resposta = await request(app)
                 .post('/transfer')
+                .set('Authorization', `Bearer ${token}`)
                 .send({
                     from: "Guilherme",
                     to: "priscila",
@@ -66,53 +67,55 @@ describe('Transfer Controller', () => {
             sinon.restore();
         });
 
-        it.only('Usando Mocks: Quando informo dados validos recebo 201', async () => {
-            
-            const login = await request('http://localhost:3000')
-                .post('/users/login')
-                .send({
-                    username: "Guilherme",
-                    password: "12345" 
+        it('Usando Mocks: Quando informo dados validos recebo 201', async () => {
+
+         // Mocar apenas a função transfer do Service
+        const transferServiceMock = sinon.stub(transferService, 'transfer');
+        transferServiceMock.returns({
+            from: "Guilherme",
+            to: "Bianca",
+            amount: 100,
+            date: new Date().toISOString()
+        });
+
+        // First, perform the login to receive the token
+        const login = await request('http://localhost:3000')
+            .post('/users/login')
+            .send({
+                username: "Guilherme",
+                password: "12345" 
             });
-            const token = login.body.token;            
-            // Mocar apenas a função transfer do Service
-            const transferServiceMock = sinon.stub(transferService, 'transfer');
-            transferServiceMock.returns({
+        
+        // Retrieve the token from the response
+        const token = login.body.token;
+
+        // Now make the transfer request using the retrieved token
+        const resposta = await request(app)
+            .post('/transfer')
+            .set('Authorization', `Bearer ${token}`) // Now `token` is initialized
+            .send({
                 from: "Guilherme",
                 to: "Bianca",
-                amount: 100,
-                date: new Date().toISOString()
+                amount: 100
             });
 
-            const resposta = await request(app)
-                .post('/transfer')
-                .set('Authorization', `Bearer ${token}`)
-                .send({
-                    from: "Guilherme",
-                    to: "Bianca",
-                    amount: 100
-    
-            });
+        // Validações comuns
+        expect(resposta.status).to.equal(201);
+        expect(resposta.body).to.have.property('from', 'Guilherme');
+        expect(resposta.body).to.have.property('to', 'Bianca');
+        expect(resposta.body).to.have.property('amount', 100);
 
-            // Validações comuns
-            //expect(resposta.status).to.equal(201);
-            //expect(resposta.body).to.have.property('from', 'Guilherme');
-            //expect(resposta.body).to.have.property('to', 'Bianca');
-            //expect(resposta.body).to.have.property('amount', 100);
+        // Validações com fixtures
+        const valoresValidos = require('../fixture/respostas/valoresValidosAPI.json');
 
-            // Validações com fixtures
-            const valoresValidos = require('../fixture/respostas/valoresValidosAPI.json');
-
-            // Validando deep equal (tudo igual)
-            // expect(resposta.body).to.deep.equal(valoresValidos);
-            delete valoresValidos.date; // removo a data do objeto para não dar erro na comparação porque o date é dinâmico
-            delete resposta.body.date; // removo a data do objeto para não dar erro na comparação porque o date é dinâmico
-            console.log(resposta.body);
-            console.log(valoresValidos);
-            expect(resposta.body).to.deep.equal(valoresValidos);
-            expect(resposta.status).to.equal(201);    
-            sinon.restore();
-        
+        // Validando deep equal (tudo igual)
+        delete valoresValidos.date; // removo a data do objeto para não dar erro na comparação porque o date é dinâmico
+        delete resposta.body.date; // removo a data do objeto para não dar erro na comparação porque o date é dinâmico
+        console.log(resposta.body);
+        console.log(valoresValidos);
+        expect(resposta.body).to.deep.equal(valoresValidos);
+        expect(resposta.status).to.equal(201);    
+        sinon.restore();
         });
     });
 
