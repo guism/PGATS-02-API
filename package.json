@@ -10,8 +10,11 @@
   },
   "scripts": {
     "start": "node server.js",
-    "test": "mocha test/**/*.test.js --timeout 10000",
-    "test-external": "mocha test/external/**/*.test.js --timeout 10000",
-    "test-controller": "mocha test/controller/**/*.test.js --timeout 10000"
+    "test": "mocha test/**/*.test.js --timeout 10000 --reporter mochawesome",
+    "test-external": "mocha test/external/**/*.test.js --timeout 10000 --reporter mochawesome",
+    "test-controller": "mocha test/controller/**/*.test.js --timeout 10000 --reporter mochawesome"
+  },
+  "devDependencies": {
+    "mochawesome": "^7.1.4"
   }
 }
